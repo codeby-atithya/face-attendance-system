@@ -1,0 +1,45 @@
+# Face Attendance System — Cursor Rules
+
+## Project Overview
+This is a pure frontend (HTML/CSS/JS) face recognition attendance system.
+- No framework (no React, no Vue) — plain vanilla JS
+- Face detection via face-api.js CDN (TinyFaceDetector + FaceRecognitionNet)
+- Data stored in localStorage (face descriptors as Float32Array)
+- Google Sheets sync via Google Apps Script Web App
+
+## File Structure
+- `index.html` — Single page app with all tab sections
+- `src/style.css` — All styles with CSS custom properties
+- `src/app.js` — All application logic (state, camera, detection, sync)
+- `scripts/google-apps-script.js` — Paste into Google Apps Script editor
+- `SETUP.md` — Full setup instructions
+
+## Key State Variables (in app.js)
+- `registered[]` — Array of {id, name, role, dept, descriptor (Float32Array), registeredAt}
+- `attendanceLog[]` — Array of {id, name, role, dept, status, time, confidence}
+- `settings{}` — {sheetId, sheetTab, scriptUrl, confThreshold, autoConfirm, allowDupes}
+
+## Face Detection Flow
+1. loadModels() — loads TinyFaceDetector + FaceLandmarks68Tiny + FaceRecognition from jsDelivr CDN
+2. captureAndRegister() — detects single face, stores descriptor
+3. runDetection() — detects all faces, compares euclideanDistance against registered descriptors
+4. Match threshold: (100 - confThreshold) / 100 (lower euclidean distance = better match)
+
+## Google Sheets Sync
+- Uses fetch() POST to Apps Script Web App URL
+- Payload: { action: 'appendRows', rows: [...], sheetName: 'Attendance' }
+- Duplicate check: same Name + Date combo is skipped
+
+## Important Notes
+- Must run on http://localhost (not file://) for camera API to work
+- Face descriptors are Float32Array — must convert to/from Array for localStorage JSON
+- Models load from: https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights
+- Do NOT add a backend — keep this fully static
+
+## Running
+```bash
+npm start          # Uses npx serve
+# OR
+python3 -m http.server 3000   # Python fallback
+```
+Then open http://localhost:3000

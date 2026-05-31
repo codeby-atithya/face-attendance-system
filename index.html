@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Face Attendance System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="src/style.css" />
+  <script src="public/face-api.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+  <div class="bg-grid"></div>
+  <div class="bg-glow bg-glow-1"></div>
+  <div class="bg-glow bg-glow-2"></div>
+
+  <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
+          <path d="M4 14c0-3.3 2.7-6 6-6h4c3.3 0 6 2.7 6 6v2H4v-2z"/>
+          <circle cx="9" cy="10" r="1" fill="currentColor"/>
+          <circle cx="15" cy="10" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">FaceAttend</span>
+        <span class="brand-tag">Secure Access</span>
+      </div>
+    </div>
+
+    <nav>
+      <span class="nav-label">Main Menu</span>
+      <button class="nav-btn active" data-tab="dashboard">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </span>
+        <span class="nav-text">Dashboard</span>
+        <span class="nav-indicator"></span>
+      </button>
+      <button class="nav-btn" data-tab="register">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        </span>
+        <span class="nav-text">Register</span>
+        <span class="nav-indicator"></span>
+      </button>
+      <button class="nav-btn" data-tab="scan">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
+        </span>
+        <span class="nav-text">Scan Attendance</span>
+        <span class="nav-indicator"></span>
+      </button>
+      <button class="nav-btn" data-tab="log">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </span>
+        <span class="nav-text">Attendance Log</span>
+        <span class="nav-indicator"></span>
+      </button>
+      <button class="nav-btn" data-tab="students">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </span>
+        <span class="nav-text">Students</span>
+        <span class="nav-indicator"></span>
+      </button>
+      <span class="nav-label">System</span>
+      <button class="nav-btn" data-tab="settings">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </span>
+        <span class="nav-text">Settings</span>
+        <span class="nav-indicator"></span>
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div id="model-status" class="model-status loading">
+        <span class="dot"></span>
+        <div class="model-status-info">
+          <span class="model-status-label">AI Models</span>
+          <span id="model-status-text">Loading models…</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="app-shell">
+    <header class="mobile-header">
+      <button class="menu-toggle" onclick="toggleSidebar()" aria-label="Toggle menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="mobile-title">FaceAttend</span>
+      <div id="mobile-model-dot" class="mobile-model-dot loading"></div>
+    </header>
+
+    <main class="main">
+
+      <!-- DASHBOARD -->
+      <section id="tab-dashboard" class="tab-section active">
+        <div class="page-header">
+          <div>
+            <p class="page-eyebrow">Overview</p>
+            <h1>Dashboard</h1>
+          </div>
+          <span id="today-date" class="date-badge"></span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card stat-card--cyan">
+            <div class="stat-glow"></div>
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Total Students</p>
+              <p class="stat-value" id="dash-total">0</p>
+            </div>
+          </div>
+          <div class="stat-card stat-card--green">
+            <div class="stat-glow"></div>
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Present Today</p>
+              <p class="stat-value" id="dash-present">0</p>
+            </div>
+          </div>
+          <div class="stat-card stat-card--red">
+            <div class="stat-glow"></div>
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Absent Today</p>
+              <p class="stat-value" id="dash-absent">0</p>
+            </div>
+          </div>
+          <div class="stat-card stat-card--purple">
+            <div class="stat-glow"></div>
+            <div class="stat-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            </div>
+            <div class="stat-body">
+              <p class="stat-label">Attendance Rate</p>
+              <p class="stat-value" id="dash-rate">0%</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="analytics-section">
+          <p class="section-label">Attendance Analytics</p>
+          <div class="charts-grid charts-grid--3">
+            <div class="card glass-card">
+              <div class="card-head">
+                <div>
+                  <h2>Weekly Attendance</h2>
+                  <p class="card-sub">Daily check-ins over the last 7 days</p>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chart-weekly"></canvas>
+              </div>
+            </div>
+            <div class="card glass-card">
+              <div class="card-head">
+                <div>
+                  <h2>Monthly Attendance</h2>
+                  <p class="card-sub">Daily check-ins this calendar month</p>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="chart-monthly"></canvas>
+              </div>
+            </div>
+            <div class="card glass-card">
+              <div class="card-head">
+                <div>
+                  <h2>Present vs Absent</h2>
+                  <p class="card-sub">Today's distribution</p>
+                </div>
+              </div>
+              <div class="chart-wrap chart-wrap--donut">
+                <canvas id="chart-donut"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="card glass-card analytics-student-card">
+            <div class="card-head">
+              <div>
+                <h2>Student Attendance Rate</h2>
+                <p class="card-sub">Attendance percentage per student this month</p>
+              </div>
+            </div>
+            <div class="chart-wrap chart-wrap--tall">
+              <canvas id="chart-student-pct"></canvas>
+            </div>
+            <div id="student-analytics-empty" class="empty analytics-empty hidden">No registered students yet.</div>
+          </div>
+        </div>
+
+        <div class="dash-row">
+          <div class="card glass-card flex-1">
+            <div class="card-head">
+              <h2>Recent Activity</h2>
+              <p class="card-sub">Latest check-ins today</p>
+            </div>
+            <div id="recent-activity" class="activity-list"><p class="empty">No activity today yet.</p></div>
+          </div>
+          <div class="card glass-card quick-actions-card">
+            <div class="card-head">
+              <h2>Quick Actions</h2>
+              <p class="card-sub">Common tasks</p>
+            </div>
+            <div class="quick-actions">
+              <button class="qa-btn" onclick="switchTab('scan')">
+                <span class="qa-icon qa-icon--cyan">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="4"/></svg>
+                </span>
+                Start Scanning
+              </button>
+              <button class="qa-btn" onclick="switchTab('register')">
+                <span class="qa-icon qa-icon--green">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+                </span>
+                Register Student
+              </button>
+              <button class="qa-btn" onclick="exportCSV()">
+                <span class="qa-icon qa-icon--purple">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                </span>
+                Export CSV
+              </button>
+              <button class="qa-btn" onclick="exportPDF()">
+                <span class="qa-icon qa-icon--red">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                </span>
+                Export PDF
+              </button>
+              <button class="qa-btn" onclick="syncToSheets()">
+                <span class="qa-icon qa-icon--amber">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </span>
+                Sync to Sheets
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- REGISTER -->
+      <section id="tab-register" class="tab-section">
+        <div class="page-header">
+          <div>
+            <p class="page-eyebrow">Enrollment</p>
+            <h1>Register Student</h1>
+          </div>
+        </div>
+
+        <div class="register-steps">
+          <div class="step-pill active"><span>1</span> Details</div>
+          <div class="step-divider"></div>
+          <div class="step-pill"><span>2</span> Face Capture</div>
+        </div>
+
+        <div class="two-col register-layout">
+          <div class="card glass-card">
+            <div class="card-head">
+              <h2>Student Details</h2>
+              <p class="card-sub">Enter identity information</p>
+            </div>
+            <div class="form-group">
+              <label>Full Name <span class="req">*</span></label>
+              <input type="text" id="reg-name" placeholder="e.g. Arjun Kumar" />
+            </div>
+            <div class="form-group">
+              <label>Roll Number / ID</label>
+              <input type="text" id="reg-id" placeholder="e.g. CS2024001" />
+            </div>
+            <div class="form-group">
+              <label>Role / Class <span class="req">*</span></label>
+              <select id="reg-role">
+                <option value="">Select role</option>
+                <option value="Student">Student</option>
+                <option value="Staff">Staff</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Admin">Admin</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Department / Section</label>
+              <input type="text" id="reg-dept" placeholder="e.g. Computer Science, Section A" />
+            </div>
+          </div>
+
+          <div class="card glass-card">
+            <div class="card-head">
+              <h2>Face Capture</h2>
+              <p class="card-sub">Position face within the frame</p>
+            </div>
+            <div class="cam-box cam-box--register" id="reg-cam-box">
+              <div class="scan-frame">
+                <span class="corner corner-tl"></span>
+                <span class="corner corner-tr"></span>
+                <span class="corner corner-bl"></span>
+                <span class="corner corner-br"></span>
+              </div>
+              <div class="cam-placeholder" id="reg-placeholder">
+                <div class="cam-icon-wrap">
+                  <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                </div>
+                <p>Camera not started</p>
+                <small>Click "Start Camera" to begin capture</small>
+              </div>
+              <video id="reg-video" autoplay muted playsinline></video>
+              <canvas id="reg-overlay"></canvas>
+            </div>
+            <div class="btn-row">
+              <button class="btn-secondary" id="reg-cam-btn" onclick="toggleRegCam()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                <span class="btn-label">Start Camera</span>
+              </button>
+              <button class="btn-primary" id="reg-capture-btn" onclick="captureAndRegister()" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+                Capture & Register
+              </button>
+            </div>
+            <div id="reg-feedback" class="feedback hidden"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SCAN -->
+      <section id="tab-scan" class="tab-section">
+        <div class="page-header">
+          <div>
+            <p class="page-eyebrow">Live Detection</p>
+            <h1>Scan Attendance</h1>
+          </div>
+          <div class="status-pill" id="scan-status-pill">
+            <span class="pill-dot"></span>
+            <span id="scan-status-text">Stopped</span>
+          </div>
+        </div>
+
+        <div class="two-col scan-layout">
+          <div class="card glass-card scan-main">
+            <div class="cam-box cam-box--scan large" id="scan-cam-box">
+              <div class="scan-frame scan-frame--active">
+                <span class="corner corner-tl"></span>
+                <span class="corner corner-tr"></span>
+                <span class="corner corner-bl"></span>
+                <span class="corner corner-br"></span>
+                <div class="scan-line"></div>
+              </div>
+              <div class="cam-placeholder" id="scan-placeholder">
+                <div class="cam-icon-wrap cam-icon-wrap--scan">
+                  <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/></svg>
+                </div>
+                <p>Camera not started</p>
+                <small>Ensure face models are loaded (green indicator in sidebar)</small>
+              </div>
+              <video id="scan-video" autoplay muted playsinline></video>
+              <canvas id="scan-overlay"></canvas>
+            </div>
+            <div class="scan-controls">
+              <div class="btn-row">
+                <button class="btn-primary btn-lg" id="start-scan-btn" onclick="startScanning()">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                  Start Scanning
+                </button>
+                <button class="btn-secondary btn-lg" id="stop-scan-btn" onclick="stopScanning()" disabled>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+                  Stop
+                </button>
+              </div>
+            </div>
+            <div id="scan-feedback" class="feedback hidden"></div>
+          </div>
+
+          <div class="scan-sidebar">
+            <div class="card glass-card confirm-card" id="confirm-card" style="display:none">
+              <div class="card-head">
+                <h2>Confirm Attendance</h2>
+                <p class="card-sub">Verify identity before marking</p>
+              </div>
+              <div class="confirm-body">
+                <div class="confirm-avatar" id="confirm-avatar"><span class="avatar-fallback">AK</span></div>
+                <p class="confirm-name" id="confirm-name">Arjun Kumar</p>
+                <p class="confirm-meta" id="confirm-meta">Student · CS2024001</p>
+                <p class="confirm-conf" id="confirm-conf">Match: 94%</p>
+                <div class="btn-row confirm-actions">
+                  <button class="btn-success" onclick="confirmAttendance(true)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    Mark Present
+                  </button>
+                  <button class="btn-danger" onclick="confirmAttendance(false)">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Reject
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card glass-card">
+              <div class="card-head">
+                <h2>Today's Summary</h2>
+              </div>
+              <div class="mini-stats">
+                <div class="mini-stat mini-stat--green">
+                  <span id="scan-present">0</span>
+                  <label>Present</label>
+                </div>
+                <div class="mini-stat mini-stat--cyan">
+                  <span id="scan-total">0</span>
+                  <label>Registered</label>
+                </div>
+                <div class="mini-stat mini-stat--purple">
+                  <span id="scan-pct">0%</span>
+                  <label>Rate</label>
+                </div>
+              </div>
+            </div>
+
+            <div class="card glass-card">
+              <div class="card-head">
+                <h2>Just Marked</h2>
+              </div>
+              <div id="scan-recent" class="activity-list"><p class="empty">No scans yet.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LOG -->
+      <section id="tab-log" class="tab-section">
+        <div class="page-header">
+          <div>
+            <p class="page-eyebrow">Records</p>
+            <h1>Attendance Log</h1>
+          </div>
+          <div class="header-actions">
+            <select id="log-filter-date" onchange="renderLog()">
+              <option value="today">Today</option>
+              <option value="all">All Time</option>
+            </select>
+            <button class="btn-secondary" onclick="exportCSV()">Export CSV</button>
+            <button class="btn-secondary" onclick="exportPDF()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              Export PDF
+            </button>
+            <button class="btn-success" onclick="finalizeAttendance()">Finalize Attendance</button>
+            <button class="btn-primary" onclick="syncToSheets()">Sync to Sheets</button>
+          </div>
+        </div>
+        <div class="card glass-card table-card">
+          <div class="table-scroll">
+            <table class="att-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Photo</th>
+                  <th>Name</th>
+                  <th>Roll No.</th>
+                  <th>Role</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th>Time</th>
+                  <th>Confidence</th>
+                </tr>
+              </thead>
+              <tbody id="log-tbody"></tbody>
+            </table>
+          </div>
+          <div id="log-empty" class="empty table-empty">No attendance records found.</div>
+        </div>
+        <div id="sync-feedback" class="feedback hidden"></div>
+      </section>
+
+      <!-- STUDENTS -->
+      <section id="tab-students" class="tab-section">
+        <div class="page-header">
+          <div>
+            <p class="page-eyebrow">Directory</p>
+            <h1>Registered Students</h1>
+          </div>
+          <div class="header-actions">
+            <div class="search-wrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" id="student-search" placeholder="Search by name or ID…" oninput="renderStudents()" />
+            </div>
+            <button class="btn-secondary" onclick="clearAllStudents()">Clear All</button>
+          </div>
+        </div>
+        <div class="student-grid" id="student-grid">
+          <div class="empty grid-empty">No students registered yet.</div>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section id="tab-settings" class="tab-section">
+        <div class="page-header">
+          <div>
+            <p class="page-eyebrow">Configuration</p>
+            <h1>Settings</h1>
+          </div>
+        </div>
+        <div class="settings-cols">
+          <div>
+            <div class="card glass-card">
+              <div class="card-head">
+                <h2>Google Sheets Integration</h2>
+                <p class="card-sub">Sync attendance data to the cloud</p>
+              </div>
+              <div class="form-group">
+                <label>Google Sheet ID</label>
+                <input type="text" id="cfg-sheet-id" placeholder="Paste your Sheet ID here" />
+                <small>Found in the URL: docs.google.com/spreadsheets/d/<b>SHEET_ID</b>/edit</small>
+              </div>
+              <div class="form-group">
+                <label>Sheet Tab Name</label>
+                <input type="text" id="cfg-sheet-tab" placeholder="Attendance" value="Attendance" />
+              </div>
+              <div class="form-group">
+                <label>Google Apps Script Web App URL</label>
+                <input type="text" id="cfg-script-url" placeholder="https://script.google.com/macros/s/…/exec" />
+                <small>Deploy your Apps Script as a web app — see SETUP.md for instructions.</small>
+              </div>
+              <div class="btn-row">
+                <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+                <button class="btn-secondary" onclick="testSheetConnection()">Test Connection</button>
+              </div>
+              <div id="settings-feedback" class="feedback hidden"></div>
+            </div>
+            <div class="card glass-card">
+              <div class="card-head">
+                <h2>Detection Settings</h2>
+                <p class="card-sub">Fine-tune face matching behavior</p>
+              </div>
+              <div class="form-group">
+                <label>Confidence Threshold: <strong id="conf-val">75%</strong></label>
+                <input type="range" min="50" max="99" value="75" id="cfg-conf" step="1"
+                  oninput="document.getElementById('conf-val').textContent=this.value+'%'" />
+                <small>Higher = stricter matching. Recommended: 70–80%.</small>
+              </div>
+              <div class="form-group toggle-row">
+                <div>
+                  <label>Auto-confirm attendance</label>
+                  <small>Skip confirmation dialog; mark immediately on detection.</small>
+                </div>
+                <label class="toggle"><input type="checkbox" id="cfg-auto-confirm"><span class="slider"></span></label>
+              </div>
+              <div class="form-group toggle-row">
+                <div>
+                  <label>Allow duplicate daily entry</label>
+                  <small>Allow the same person to be marked more than once per day.</small>
+                </div>
+                <label class="toggle"><input type="checkbox" id="cfg-allow-dupes"><span class="slider"></span></label>
+              </div>
+              <button class="btn-primary" onclick="saveSettings()">Save</button>
+            </div>
+          </div>
+          <div>
+            <div class="card glass-card">
+              <div class="card-head">
+                <h2>How to Connect Google Sheets</h2>
+              </div>
+              <div class="how-to">
+                <div class="step"><span class="step-num">1</span><div><strong>Create a Google Sheet</strong><p>Go to sheets.google.com → New spreadsheet. Name it "Attendance".</p></div></div>
+                <div class="step"><span class="step-num">2</span><div><strong>Add header row</strong><p>Row 1: Name | Roll No | Role | Department | Status | Time | Confidence | Date</p></div></div>
+                <div class="step"><span class="step-num">3</span><div><strong>Open Apps Script</strong><p>In your Sheet: Extensions → Apps Script. Paste the code from <code>scripts/google-apps-script.js</code>.</p></div></div>
+                <div class="step"><span class="step-num">4</span><div><strong>Deploy as Web App</strong><p>Click Deploy → New deployment → Web App. Set access to "Anyone". Copy the URL.</p></div></div>
+                <div class="step"><span class="step-num">5</span><div><strong>Paste URL here</strong><p>Paste the Web App URL in the field on the left. Save settings.</p></div></div>
+                <div class="step"><span class="step-num">6</span><div><strong>Copy Sheet ID</strong><p>From your sheet URL, copy the ID and paste it in the Sheet ID field above.</p></div></div>
+              </div>
+            </div>
+            <div class="card glass-card">
+              <div class="card-head">
+                <h2>Data Management</h2>
+                <p class="card-sub">Danger zone — irreversible actions</p>
+              </div>
+              <button class="btn-danger-outline" onclick="clearAllData()">Clear All Attendance Data</button>
+              <button class="btn-danger-outline" onclick="clearAllStudents()">Clear All Students</button>
+              <p class="data-note">Student face data is stored in your browser's localStorage. Nothing is sent to any server unless you sync to Google Sheets.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <div id="toast-container" class="toast-container" aria-live="polite"></div>
+
+  <script src="src/app.js"></script>
+</body>
+</html>
