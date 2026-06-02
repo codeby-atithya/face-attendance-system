@@ -175,25 +175,58 @@ async function captureAndRegister() {
   }
 
   // 2. Face Duplicate Check
-  const DUP_THRESHOLD = 0.60;
-  let minDistance = 1.0;
+  // ─── Face Comparison Logic & Accuracy Improvements ──────────────────────────
+  // - Current standard: Comparing every new sample against every stored sample can
+  //   be overly sensitive to a single noisy capture frame (e.g. motion blur, lighting flicker).
+  // - Optimization: We compute the "Average Minimum Distance". For each captured sample,
+  //   we find its closest match among the registered user's stored descriptors. We then
+  //   average these minimum distances. This ensures that the face check is highly stable and
+  //   requires consistent matching across multiple frames rather than triggering a false positive
+  //   block on a single anomalous frame.
+  // - Threshold Selection: A DUP_THRESHOLD of 0.52 is used. In face-api.js, a Euclidean
+  //   distance below 0.52 represents an extremely strong, high-confidence match (almost certainly
+  //   the same person). Using 0.52 instead of 0.60 allows us to easily block genuine duplicates
+  //   while preventing false positives (incorrectly blocking similar-looking but different people
+  //   or people registered under identical lighting conditions).
+  const DUP_THRESHOLD = 0.52;
   let bestMatch = null;
+  let bestMatchDistance = 1.0;
 
   for (const person of registered) {
-    for (const storedDesc of person.descriptors) {
-      for (const newDesc of descriptors) {
+    if (!person.descriptors || person.descriptors.length === 0) continue;
+
+    let sumMinDist = 0;
+    let validSamples = 0;
+
+    for (const newDesc of descriptors) {
+      let minDescDist = 1.0;
+      for (const storedDesc of person.descriptors) {
         const dist = faceapi.euclideanDistance(newDesc, storedDesc);
-        if (dist < minDistance) {
-          minDistance = dist;
-          bestMatch = person;
+        if (dist < minDescDist) {
+          minDescDist = dist;
         }
+      }
+      sumMinDist += minDescDist;
+      validSamples++;
+    }
+
+    if (validSamples > 0) {
+      const avgMinDist = sumMinDist / validSamples;
+      if (avgMinDist < bestMatchDistance) {
+        bestMatchDistance = avgMinDist;
+        bestMatch = person;
       }
     }
   }
 
-  console.log(`[Duplicate Check] Min Distance: ${minDistance.toFixed(4)}, Threshold: ${DUP_THRESHOLD}, Match: ${bestMatch ? bestMatch.name : 'None'}`);
+  // Detailed console logging for diagnostics as requested
+  console.log(`[Face Duplicate Check]`);
+  console.log(`- Best Matched User: ${bestMatch ? bestMatch.name : 'None'}`);
+  console.log(`- Average Minimum Distance: ${bestMatchDistance.toFixed(4)}`);
+  console.log(`- Threshold: ${DUP_THRESHOLD.toFixed(2)}`);
+  console.log(`- Final Decision: ${bestMatchDistance < DUP_THRESHOLD ? 'BLOCKED' : 'ALLOWED'}`);
 
-  if (minDistance < DUP_THRESHOLD) {
+  if (bestMatchDistance < DUP_THRESHOLD) {
     showFeedback('reg-feedback', 'error', `This face is already registered as ${bestMatch.role} - ${bestMatch.name}.`);
     capturing = false;
     document.getElementById('reg-capture-btn').disabled = false;
